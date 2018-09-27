@@ -10,13 +10,13 @@ import {
   Item,
   Layer,
   Path,
+  Point,
   PointText,
   Raster,
   Tool,
 } from 'paper/dist/paper-core'
 
 import TYPES from './types'
-import { arePointsEqual } from './utils'
 
 function applyItemProps(instance, props, prevProps = {}) {
   if (props.blendMode !== prevProps.blendMode) {
@@ -27,6 +27,17 @@ function applyItemProps(instance, props, prevProps = {}) {
   }
   if (props.opacity !== prevProps.opacity) {
     instance.opacity = props.opacity
+  }
+  if (!new Point(props.pivot).equals(new Point(prevProps.pivot))) {
+    instance.rotation = 0
+    instance.pivot = props.pivot
+    instance.rotation = props.rotation || 0
+  }
+  if (!new Point(props.position).equals(new Point(prevProps.position))) {
+    instance.position = props.position
+  }
+  if (props.rotation !== prevProps.rotation) {
+    instance.rotation = props.rotation
   }
   if (props.selected !== prevProps.selected) {
     instance.selected = props.selected
@@ -55,13 +66,6 @@ function applyGroupProps(instance, props, prevProps = {}) {
       props.center[0] - prevProps.center[0],
       props.center[1] - prevProps.center[1],
     ])
-  }
-  if (!arePointsEqual(props.pivot, prevProps.pivot)) {
-    instance.pivot = props.pivot
-    instance.position = props.position
-  }
-  if (!arePointsEqual(props.position, prevProps.position)) {
-    instance.position = props.position
   }
   if (props.rotation !== prevProps.rotation) {
     // in case null is set
@@ -102,19 +106,6 @@ function applyLayerProps(instance, props, prevProps = {}) {
 
 function applyPathProps(instance, props, prevProps = {}) {
   applyItemProps(instance, props, prevProps)
-  if (!_.isEqual(props.center, prevProps.center)) {
-    instance.translate([
-      props.center[0] - prevProps.center[0],
-      props.center[1] - prevProps.center[1],
-    ])
-  }
-  if (!arePointsEqual(props.pivot, prevProps.pivot)) {
-    instance.pivot = props.pivot
-    instance.position = props.position
-  }
-  if (!arePointsEqual(props.position, prevProps.position)) {
-    instance.position = props.position
-  }
   if (props.closed !== prevProps.closed) {
     instance.closed = props.closed
   }
@@ -129,18 +120,6 @@ function applyPathProps(instance, props, prevProps = {}) {
   }
   if (props.pathData !== prevProps.pathData) {
     instance.pathData = props.pathData
-  }
-  if (!_.isEqual(props.point, prevProps.point)) {
-    instance.translate([
-      props.point[0] - prevProps.point[0],
-      props.point[1] - prevProps.point[1],
-    ])
-  }
-  if (props.rotation !== prevProps.rotation) {
-    // in case null is set
-    const rotation = props.rotation ? props.rotation : 0
-    const prevRotation = prevProps.rotation ? prevProps.rotation : 0
-    instance.rotate(rotation - prevRotation)
   }
   if (props.strokeCap !== prevProps.strokeCap) {
     instance.strokeCap = props.strokeCap
@@ -174,6 +153,9 @@ function applyCircleProps(instance, props, prevProps = {}) {
   if (props.radius !== prevProps.radius) {
     instance.scale(props.radius / prevProps.radius)
   }
+  if (!new Point(props.center).equals(new Point(prevProps.center))) {
+    instance.position = props.center
+  }
 }
 
 function applyEllipseProps(instance, props, prevProps = {}) {
@@ -191,6 +173,7 @@ function applyRasterProps(instance, props, prevProps = {}) {
 }
 
 function applyPointTextProps(instance, props, prevProps = {}) {
+  applyItemProps(instance, props, prevProps)
   if (props.content !== prevProps.content) {
     instance.content = props.content
   }
@@ -206,11 +189,8 @@ function applyPointTextProps(instance, props, prevProps = {}) {
   if (props.fontWeight !== prevProps.fontWeight) {
     instance.fontWeight = props.fontWeight
   }
-  if (!_.isEqual(props.point, prevProps.point)) {
-    instance.translate([
-      props.point[0] - prevProps.point[0],
-      props.point[1] - prevProps.point[1],
-    ])
+  if (!new Point(props.point).equals(prevProps.point)) {
+    instance.translate(new Point(props.point).subtract(prevProps.point))
   }
 }
 
@@ -277,6 +257,10 @@ const PaperRenderer = ReactFiberReconciler({
         instance = new Path.Line(paperProps)
         instance._applyProps = applyPathProps
         break
+      case TYPES.ARC:
+        instance = new Path.Arc(paperProps)
+        instance._applyProps = applyPathProps
+        break
       case TYPES.PATH:
         instance = new Path(paperProps)
         instance._applyProps = applyPathProps
@@ -332,7 +316,7 @@ const PaperRenderer = ReactFiberReconciler({
         }
         break
       default:
-        break;
+        break
     }
     return false
   },
@@ -369,7 +353,8 @@ const PaperRenderer = ReactFiberReconciler({
     return emptyObject
   },
 
-  scheduleDeferredCallback: typeof window !== 'undefined' ? window.requestIdleCallback : null,
+  scheduleDeferredCallback:
+    typeof window !== 'undefined' ? window.requestIdleCallback : null,
 
   shouldSetTextContent(type, props) {
     return (

@@ -19,7 +19,7 @@
     "start": "NODE_ENV=development babel src -w -d lib",
     "build": "NODE_ENV=production babel src -d lib",
     "lint": "NODE_ENV=development eslint src/**",
-    "format": "prettier --trailing-comma es5 --no-semi --single-quote --write \"src/**/*.js\"",
+    "format": "prettier --write \"src/**/*.js\"",
     "test": "cd test && npm install && bash test.sh",
     "prepublish": "npm run build",
     "semantic-release": "semantic-release",

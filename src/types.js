@@ -6,6 +6,7 @@ export default {
   GROUP: 'Group',
   LAYER: 'Layer',
   LINE: 'Line',
+  ARC: 'Arc',
   PATH: 'Path',
   POINTTEXT: 'PointText',
   RASTER: 'Raster',
