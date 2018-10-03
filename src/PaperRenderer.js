@@ -218,6 +218,29 @@ function applyToolProps(instance, props, prevProps = {}) {
   }
 }
 
+function applyLineProps(instance, props, prevProps = {}) {
+  applyPathProps(instance, props, prevProps)
+  if (props.from !== prevProps.from) {
+    instance.firstSegment.point = props.from
+  }
+  if (props.to !== prevProps.to) {
+    instance.lastSegment.point = props.to
+  }
+}
+
+function applyArcProps(instance, props, prevProps = {}) {
+  applyPathProps(instance, props, prevProps)
+  if (
+    props.from !== prevProps.from ||
+    props.through !== prevProps.through ||
+    props.to !== prevProps.to
+  ) {
+    const newArc = new Path.Arc(props)
+    instance.pathData = newArc.pathData
+    newArc.remove()
+  }
+}
+
 const PaperRenderer = ReactFiberReconciler({
   appendInitialChild(parentInstance, child) {
     if (typeof child === 'string') {
@@ -255,11 +278,11 @@ const PaperRenderer = ReactFiberReconciler({
         break
       case TYPES.LINE:
         instance = new Path.Line(paperProps)
-        instance._applyProps = applyPathProps
+        instance._applyProps = applyLineProps
         break
       case TYPES.ARC:
         instance = new Path.Arc(paperProps)
-        instance._applyProps = applyPathProps
+        instance._applyProps = applyArcProps
         break
       case TYPES.PATH:
         instance = new Path(paperProps)
