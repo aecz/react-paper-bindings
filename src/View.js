@@ -47,7 +47,7 @@ export default class View extends Component<Props> {
 
     this.mountNode = PaperRenderer.createContainer(this.paper)
 
-    PaperRenderer.updateContainer(children, this.mountNode, this)
+    PaperRenderer.updateContainer(children, this.mountNode)
 
     // initial active layer
     if (typeof activeLayer === 'number') {
@@ -66,7 +66,7 @@ export default class View extends Component<Props> {
     const { children, width, height } = this.props
     const { view } = this.paper
 
-    PaperRenderer.updateContainer(children, this.mountNode, this)
+    PaperRenderer.updateContainer(children, this.mountNode)
 
     // size has changed, update center
     if (width !== prevProps.width || height !== prevProps.height) {
@@ -77,7 +77,7 @@ export default class View extends Component<Props> {
   }
 
   componentWillUnmount() {
-    PaperRenderer.updateContainer(null, this.mountNode, this)
+    PaperRenderer.updateContainer(null, this.mountNode)
   }
 
   canvasRef = (ref: ?HTMLElement) => {
